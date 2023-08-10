@@ -1,2 +1,4 @@
-# l4d2_ds_script
- Server management script
+# About Dedicated Server Script
+Server management script
+
+Coming soon
