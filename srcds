@@ -1,0 +1,175 @@
+#!/bin/sh
+
+PARAM_ACTION=0
+PARAM_NUMBER=0
+
+while [ -n "$1" ]
+do
+case "$1" in
+	-a)
+		ACTION="$2"
+		PARAM_ACTION=1
+		shift ;;
+	-n)
+		SVNUM="$2"
+		PARAM_NUMBER=1
+		shift ;;
+	*) echo "$1 is not an option";;
+esac
+shift
+done
+
+if [ $PARAM_ACTION -ne 1 ]; then
+	echo "Use: $0 -a <start|stop|restart|status|console>"
+	exit 1
+fi
+
+if [ $PARAM_NUMBER -ne 1 ]; then
+	echo "Use: $0 -n <server num>"
+	exit 1
+fi
+
+###########################################
+#                                         #
+#              USER PARAMS                #
+#                                         #
+###########################################
+
+# User
+SRCDS_USER="root"
+
+# Path to server
+DIR=/home/$SRCDS_USER/l4d2server$SVNUM
+
+if [ ! -d $DIR ]; then
+	echo "|"
+	echo "| Error: Directory $DIR does not exists."
+	echo "|"
+	exit 1
+fi
+
+# Do not change
+DAEMON="$DIR/srcds_run"
+
+# Do not change this path
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# Change all Parameters to your needs.
+CORENUM=$(($SVNUM - 1))
+PORT=$((27015 + $SVNUM))
+NAME="YOU PROJECT NAME"
+DESC="$NAME #$SVNUM on port $PORT"
+PARAMS="-game left4dead2 -port $PORT \
++map c8m5_rooftop
++mp_gamemode survival
+-tickrate 100 \
++sn_main_name \"$NAME #$SVNUM\""
+
+SCREENNUM=$((10 + $SVNUM))
+SCREENNAME="l4d2server$SCREENNUM"
+
+###########################################
+#                                         #
+#           DON'T TOUCH THESE             #
+#                                         #
+###########################################
+
+run_server()
+{
+	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+		echo "|"
+		echo "| $DESC: Already started!"
+		echo "|"
+	else
+		echo "$DESC: Starting ..."
+		cd $DIR
+		su $SRCDS_USER -l -c "taskset -c $CORENUM screen -mdS $SCREENNAME $DAEMON $PARAMS"
+	fi
+}
+
+stop_server()
+{
+	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+		echo "$DESC: Stopping ..."
+		kill `su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME |awk -F . '{print $1}'|awk '{print $1}'`
+		echo " ... done."
+	else
+		echo "|"
+		echo "| Couldn't find a running $DESC"
+		echo "|"
+	fi
+}
+
+update_server()
+{
+	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+		kill `su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME |awk -F . '{print $1}'|awk '{print $1}'`
+		sleep 2
+	fi
+
+	su $SRCDS_USER -l -c "steamcmd +login anonymous +force_install_dir $DIR/ +app_update 222860 validate +quit"
+}
+
+print_status()
+{
+	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+		echo "|"
+		echo "| $DESC online!"
+		echo "|"
+	else
+		echo "|"
+		echo "| $DESC offline!"
+		echo "|"
+	fi
+}
+
+show_console()
+{
+	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+		echo "|"
+		echo "| To exit the console, press Ctrl+A, and D"
+		echo "| To turn off the server, press Ctrl+D"
+		echo "|"
+		sleep 2
+		su $SRCDS_USER -l -c "screen -r $SCREENNAME"
+	else
+		echo "|"
+		echo "| Couldn't find a running $DESC"
+		echo "|"
+	fi
+}
+
+case "$ACTION" in
+	start)
+		run_server
+		;;
+
+	stop)
+		stop_server
+		;;
+
+	restart)
+		stop_server
+		sleep 2
+		run_server
+		;;
+
+	update)
+		print_status
+		;;
+
+	status)
+		print_status
+		;;
+
+	console)
+		show_console
+		;;
+
+	*)
+		echo "Use: $0 -a <start|stop|restart|status|console>"
+		exit 1
+		;;
+esac
+
+exit 0
