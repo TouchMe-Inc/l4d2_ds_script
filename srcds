@@ -164,6 +164,10 @@ case "$ACTION" in
 		show_console
 		;;
 
+	update)
+		update_server
+		;;
+
 	*)
 		echo "Use: $0 -a <start|stop|restart|status|console>"
 		exit 1
