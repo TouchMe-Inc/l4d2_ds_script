@@ -36,10 +36,10 @@ fi
 ###########################################
 
 # User
-SRCDS_USER="root"
+SRCDS_USER="USER"
 
 # Path to server
-DIR=/home/$SRCDS_USER/l4d2server$SVNUM
+DIR=/home/$SRCDS_USER/servers/l4d2_$SVNUM
 
 if [ ! -d $DIR ]; then
 	echo "|"
@@ -48,31 +48,33 @@ if [ ! -d $DIR ]; then
 	exit 1
 fi
 
-# Do not change
-DAEMON="$DIR/srcds_run"
-
-# Do not change this path
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
-
 # Change all Parameters to your needs.
-CORENUM=$(($SVNUM - 1))
-PORT=$((27015 + $SVNUM))
-NAME="YOU PROJECT NAME"
-DESC="$NAME #$SVNUM on port $PORT"
-PARAMS="-game left4dead2 -port $PORT \
-+map c8m5_rooftop
-+mp_gamemode survival
--tickrate 100 \
-+sn_main_name \"$NAME #$SVNUM\""
-
-SCREENNUM=$((10 + $SVNUM))
-SCREENNAME="l4d2server$SCREENNUM"
+PROJECT="PROJECT NAME (NEED FOR CONSOLE MESSAGE)"
+IP="SERVER IP"
+PORT=$((27014 + $SVNUM))
+PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus"
 
 ###########################################
 #                                         #
 #           DON'T TOUCH THESE             #
 #                                         #
 ###########################################
+
+# Do not change
+DAEMON="$DIR/srcds_run"
+
+# Do not change this path
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# Set core for server (1 core = 1 server)
+CORENUM=$(($SVNUM - 1))
+
+# Set screen
+SCREENNUM=$((10 + $SVNUM))
+SCREENNAME="l4d2server$SCREENNUM"
+
+# Description for console message
+DESC="$PROJECT #$SVNUM on $IP:$PORT"
 
 run_server()
 {
@@ -104,7 +106,7 @@ update_server()
 {
 	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
 		kill `su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME |awk -F . '{print $1}'|awk '{print $1}'`
-		sleep 2
+		sleep 3
 	fi
 
 	su $SRCDS_USER -l -c "steamcmd +login anonymous +force_install_dir $DIR/ +app_update 222860 validate +quit"
@@ -127,10 +129,10 @@ show_console()
 {
 	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
 		echo "|"
-		echo "| To exit the console, press Ctrl+A, and D"
+		echo "| To exit the console, press Ctrl+A and Ctrl+D"
 		echo "| To turn off the server, press Ctrl+D"
 		echo "|"
-		sleep 2
+		sleep 3
 		su $SRCDS_USER -l -c "screen -r $SCREENNAME"
 	else
 		echo "|"
@@ -152,10 +154,6 @@ case "$ACTION" in
 		stop_server
 		sleep 2
 		run_server
-		;;
-
-	update)
-		print_status
 		;;
 
 	status)
