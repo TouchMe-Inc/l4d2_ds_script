@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 PARAM_ACTION=0
 PARAM_NUMBER=0
 
@@ -20,7 +22,7 @@ shift
 done
 
 if [ $PARAM_ACTION -ne 1 ]; then
-	echo "Use: $0 -a <start|stop|restart|status|console>"
+	echo "Use: $0 -a <start|stop|restart|status|update|console>"
 	exit 1
 fi
 
@@ -54,16 +56,16 @@ IP="SERVER IP"
 PORT=$((27014 + $SVNUM))
 PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus"
 
+# Description for console message
+DESC="PROJECT NAME #$SVNUM on $IP:$PORT"
+
 ###########################################
 #                                         #
 #           DON'T TOUCH THESE             #
 #                                         #
 ###########################################
 
-# Do not change
 DAEMON="$DIR/srcds_run"
-
-# Do not change this path
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 # Set core for server (1 core = 1 server)
@@ -71,10 +73,7 @@ CORENUM=$(($SVNUM - 1))
 
 # Set screen
 SCREENNUM=$((10 + $SVNUM))
-SCREENNAME="l4d2server$SCREENNUM"
-
-# Description for console message
-DESC="$PROJECT #$SVNUM on $IP:$PORT"
+SCREENNAME="L4D2_DS_$SCREENNUM"
 
 run_server()
 {
@@ -169,7 +168,7 @@ case "$ACTION" in
 		;;
 
 	*)
-		echo "Use: $0 -a <start|stop|restart|status|console>"
+		echo "Use: $0 -a <start|stop|restart|status|update|console>"
 		exit 1
 		;;
 esac
