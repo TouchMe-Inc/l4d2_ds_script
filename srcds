@@ -37,11 +37,8 @@ fi
 #                                         #
 ###########################################
 
-# User
-SRCDS_USER="USER"
-
 # Path to server
-DIR=/home/$SRCDS_USER/servers/l4d2_$SVNUM
+DIR=~/servers/l4d2_$SVNUM
 
 if [ ! -d $DIR ]; then
 	echo "|"
@@ -51,13 +48,17 @@ if [ ! -d $DIR ]; then
 fi
 
 # Change all Parameters to your needs.
-PROJECT="PROJECT NAME (NEED FOR CONSOLE MESSAGE)"
-IP="SERVER IP"
+IP="192.168.0.1"
 PORT=$((27014 + $SVNUM))
-PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus"
+
+if [ $SVNUM -eq 11 ]; then
+	PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus +sm_match_autoload \"touchme_t2\""
+else
+	PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus"
+fi
 
 # Description for console message
-DESC="PROJECT NAME #$SVNUM on $IP:$PORT"
+DESC="Server #$SVNUM on $IP:$PORT"
 
 ###########################################
 #                                         #
@@ -75,24 +76,28 @@ CORENUM=$(($SVNUM - 1))
 SCREENNUM=$((10 + $SVNUM))
 SCREENNAME="L4D2_DS_$SCREENNUM"
 
+
+find_server() {
+	screen -ls |grep $SCREENNAME;
+}
+
 run_server()
 {
-	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+	if find_server; then
 		echo "|"
 		echo "| $DESC: Already started!"
 		echo "|"
 	else
 		echo "$DESC: Starting ..."
-		cd $DIR
-		su $SRCDS_USER -l -c "taskset -c $CORENUM screen -mdS $SCREENNAME $DAEMON $PARAMS"
+		taskset -c $CORENUM screen -mdS $SCREENNAME $DAEMON $PARAMS
 	fi
 }
 
 stop_server()
 {
-	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+	if find_server; then
 		echo "$DESC: Stopping ..."
-		kill `su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME |awk -F . '{print $1}'|awk '{print $1}'`
+		kill `find_server |awk -F . '{print $1}'|awk '{print $1}'`
 		echo " ... done."
 	else
 		echo "|"
@@ -103,17 +108,17 @@ stop_server()
 
 update_server()
 {
-	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
-		kill `su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME |awk -F . '{print $1}'|awk '{print $1}'`
+	if find_server; then
+		kill `find_server |awk -F . '{print $1}'|awk '{print $1}'`
 		sleep 3
 	fi
 
-	su $SRCDS_USER -l -c "steamcmd +login anonymous +force_install_dir $DIR/ +app_update 222860 validate +quit"
+	steamcmd +login anonymous +force_install_dir $DIR/ +app_update 222860 validate +quit
 }
 
 print_status()
 {
-	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+	if find_server; then
 		echo "|"
 		echo "| $DESC online!"
 		echo "|"
@@ -126,13 +131,13 @@ print_status()
 
 show_console()
 {
-	if su $SRCDS_USER -l -c "screen -ls" |grep $SCREENNAME; then
+	if find_server; then
 		echo "|"
 		echo "| To exit the console, press Ctrl+A and Ctrl+D"
 		echo "| To turn off the server, press Ctrl+D"
 		echo "|"
 		sleep 3
-		su $SRCDS_USER -l -c "screen -r $SCREENNAME"
+		screen -r $SCREENNAME
 	else
 		echo "|"
 		echo "| Couldn't find a running $DESC"
@@ -142,35 +147,28 @@ show_console()
 
 case "$ACTION" in
 	start)
-		run_server
-		;;
+		run_server ;;
 
 	stop)
-		stop_server
-		;;
+		stop_server ;;
 
 	restart)
 		stop_server
 		sleep 2
-		run_server
-		;;
+		run_server ;;
 
 	status)
-		print_status
-		;;
+		print_status ;;
 
 	console)
-		show_console
-		;;
+		show_console ;;
 
 	update)
-		update_server
-		;;
+		update_server ;;
 
 	*)
 		echo "Use: $0 -a <start|stop|restart|status|update|console>"
-		exit 1
-		;;
+		exit 1 ;;
 esac
 
 exit 0
