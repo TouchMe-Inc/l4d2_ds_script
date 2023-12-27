@@ -40,13 +40,6 @@ fi
 # Path to server
 DIR=~/servers/l4d2_$SVNUM
 
-if [ ! -d $DIR ]; then
-	echo "|"
-	echo "| Error: Directory $DIR does not exists."
-	echo "|"
-	exit 1
-fi
-
 # Change all Parameters to your needs.
 IP="192.168.0.1"
 PORT=$((27014 + $SVNUM))
@@ -65,6 +58,13 @@ DESC="Server #$SVNUM on $IP:$PORT"
 #           DON'T TOUCH THESE             #
 #                                         #
 ###########################################
+
+if [ ! -d $DIR ]; then
+	echo "|"
+	echo "| Error: Directory $DIR does not exists."
+	echo "|"
+	exit 1
+fi
 
 DAEMON="$DIR/srcds_run"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
