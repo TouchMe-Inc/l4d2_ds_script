@@ -88,17 +88,22 @@ run_server()
 		echo "| $DESC: Already started!"
 		echo "|"
 	else
-		echo "$DESC: Starting ..."
+		echo "|"
+		echo -n "| $DESC: Starting ... "
 		taskset -c $CORENUM screen -mdS $SCREENNAME $DAEMON $PARAMS
+		echo "done."
+		echo "|"
 	fi
 }
 
 stop_server()
 {
 	if find_server; then
-		echo "$DESC: Stopping ..."
+		echo "|"
+		echo -n "| $DESC: Stopping ... "
 		kill `find_server |awk -F . '{print $1}'|awk '{print $1}'`
-		echo " ... done."
+		echo "done."
+		echo "|"
 	else
 		echo "|"
 		echo "| Couldn't find a running $DESC"
