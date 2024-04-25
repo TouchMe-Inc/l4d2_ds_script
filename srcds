@@ -43,12 +43,7 @@ DIR=~/servers/l4d2_$SVNUM
 # Change all Parameters to your needs.
 IP="192.168.0.1"
 PORT=$((27014 + $SVNUM))
-
-if [ $SVNUM -eq 11 ]; then
-	PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus +sm_match_autoload \"touchme_t2\""
-else
-	PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus"
-fi
+PARAMS="-game left4dead2 -steam -ip $IP -port $PORT -tickrate 100 +map c1m1_hotel +mp_gamemode versus +sv_gametypes versus"
 
 # Description for console message
 DESC="Server #$SVNUM on $IP:$PORT"
